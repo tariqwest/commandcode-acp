@@ -1,0 +1,72 @@
+{
+  "name": "commandcode-acp",
+  "version": "0.1.0",
+  "description": "ACP stdio adapter for Command Code CLI (cmd)",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "commandcode-acp": "./bin/commandcode-acp.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "!src/**/*.test.ts",
+    "README.md",
+    "AGENTS.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22",
+    "bun": ">=1.1.0"
+  },
+  "scripts": {
+    "start": "bun src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test src",
+    "commandcode-acp": "bun src/index.ts",
+    "start:node": "tsx src/index.ts",
+    "test:node": "tsx --test src/map.test.ts src/session-store.test.ts src/config-options.test.ts src/cmd.test.ts",
+    "release": "bun scripts/release.mjs",
+    "release:dry": "bun scripts/release.mjs --dry-run",
+    "prepack": "bun test && bun run typecheck",
+    "prepublishOnly": "bun test && bun run typecheck",
+    "formula": "bun scripts/generate-homebrew-formula.mjs",
+    "formula:write": "bun scripts/generate-homebrew-formula.mjs --write Formula/commandcode-acp.rb"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "^1.3.0",
+    "tsx": "^4.20.5",
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.19",
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
+  },
+  "author": "Tariq West",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tariqwest/commandcode-acp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tariqwest/commandcode-acp/issues"
+  },
+  "homepage": "https://github.com/tariqwest/commandcode-acp#readme",
+  "keywords": [
+    "acp",
+    "agent-client-protocol",
+    "command-code",
+    "commandcode",
+    "cmd",
+    "zed",
+    "stdio",
+    "cli",
+    "agent"
+  ],
+  "packageManager": "bun@1.3.14",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}
