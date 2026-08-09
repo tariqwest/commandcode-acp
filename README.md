@@ -1,6 +1,6 @@
 # commandcode-acp
 
-An [Agent Client Protocol (ACP)](https://agentclientprotocol.com) stdio adapter for [Command Code](https://commandcode.ai) (`cmd`). It bridges `cmd` into ACP hosts such as [Zed](https://zed.dev), VS Code / GitHub Copilot clients, and [Devin Desktop](https://docs.devin.ai/desktop/acp).
+An [Agent Client Protocol (ACP)](https://agentclientprotocol.com) stdio adapter for [Command Code](https://commandcode.ai) (`cmd`). It bridges `cmd` into ACP hosts such as [Zed](https://zed.dev), VS Code / GitHub Copilot clients, and [Devin Desktop](https://docs.devin.ai/desktop/acp), so you can use Command Code's models and coding agent from any ACP-compatible editor.
 
 Modeled after [`oz-acp`](https://github.com/tariqwest/oz-acp) / [`warp-acp`](https://github.com/tariqwest/warp-acp) / [`antigravity-acp`](https://github.com/shubzkothekar/antigravity-acp) / [`fm-acp`](https://github.com/tariqwest/fm-acp), implemented in TypeScript and driven by Command Code's headless mode (`cmd -p --output-format json`).
 
@@ -8,6 +8,19 @@ Modeled after [`oz-acp`](https://github.com/tariqwest/oz-acp) / [`warp-acp`](htt
 ACP host (Zed / VS Code / …)
    <--stdin/stdout NDJSON-->  commandcode-acp  <--subprocess-->  cmd -p --output-format json
 ```
+
+## Status
+
+**v0.1.0 released.** The adapter is installable from GitHub (npx) and from the [Homebrew tap](https://github.com/tariqwest/homebrew-tap) (`tariqwest/tap`). It is **not yet published to npm** — the `commandcode-acp` name is reserved and will be published in a future release; for now use the GitHub/npx path below.
+
+## Features
+
+- **Full ACP session lifecycle** — `new` / `load` / `resume` / `list` / `delete` / `close`, plus `prompt` / `cancel` and config options
+- **Multi-turn continuation** — each ACP session binds to a Command Code headless session id; later turns resume via `cmd --resume` so prior context carries automatically
+- **Live tool streaming** — `cmd -p` NDJSON tool frames stream to the host as `tool_call` updates while the run is in progress
+- **Config options** — model (from `cmd --list-models`), reasoning `effort`, and `permission_mode` (standard / plan / auto-accept), settable via host UI or `session/set_config_option`
+- **Session persistence** — bindings survive restarts at `~/.config/commandcode-acp/sessions.json`
+- **Dual runtime** — runs on Bun (direct `.ts`) or Node + tsx (`npx`), no compile step
 
 ## Prerequisites
 
@@ -36,17 +49,24 @@ If `cmd whoami` fails, run `cmd login` first.
 # from GitHub (no local clone required)
 npx -y https://github.com/tariqwest/commandcode-acp
 
-# after the package is on npm
+# Homebrew (requires Node; cmd on PATH — see Prerequisites)
+brew tap tariqwest/tap && brew install commandcode-acp
+
+# after the package is published on npm
 npx -y commandcode-acp
 ```
 
 These install/run paths use the package bin (`bin/commandcode-acp.mjs`): under **Node** it loads TypeScript via **tsx** (for `npx` compatibility); under **Bun** it imports `src/index.ts` directly.
+
+> **npm note:** the `commandcode-acp` npm package is not published yet — the GitHub `npx` and Homebrew paths above are the current install methods.
 
 ### Install the CLI
 
 ```bash
 # from GitHub
 npm install -g https://github.com/tariqwest/commandcode-acp
+# Homebrew tap (requires cmd on PATH — see Prerequisites)
+brew tap tariqwest/tap && brew install commandcode-acp
 # after npm publish
 npm install -g commandcode-acp
 
@@ -206,7 +226,7 @@ Most ACP hosts share the same spawn shape (`command` + `args` + optional `env`).
 }
 ```
 
-**After npm publish**, you can use `"args": ["-y", "commandcode-acp"]` with `npx` instead of the GitHub URL.
+**After npm publish**, you can use `"args": ["-y", "commandcode-acp"]` with `npx` instead of the GitHub URL. Until then, the GitHub URL form above is the working install path.
 
 | Field | Required | Notes |
 |---|---|---|
@@ -396,7 +416,7 @@ bun run typecheck           # tsc --noEmit (optional)
 
 ## Release
 
-Every release **couples** a GitHub release (tag + `gh release`) with a Homebrew formula update on `tariqwest/homebrew-tap`. npm publish remains optional.
+Every release **couples** a GitHub release (tag + `gh release`) with a Homebrew formula update on `tariqwest/homebrew-tap`. npm publish remains optional (and is **not yet done** for the current release).
 
 ```bash
 # dry-run (no git/gh/npm/tap changes)
@@ -405,7 +425,7 @@ bun run release 0.1.1 --dry-run
 # GitHub release + Homebrew formula (default)
 bun run release 0.1.1
 
-# + npm publish
+# + npm publish (requires npm login; also reserves the package name)
 bun run release 0.1.1 --npm
 # or: bun scripts/release.mjs 0.1.1 --npm --yes
 
@@ -417,6 +437,8 @@ bun run release 0.1.4 --no-homebrew --yes
 ```
 
 Requires a clean git worktree and `gh` auth. For `--npm` also run `npm login` first. OTP: `--otp 123456`.
+
+> **Note:** the formula fetches the GitHub tag tarball, so the repo must be **public** for `brew install` to work for others. A private repo will fail at `--source github` with an HTTP 404.
 
 Package publish surface: `bin/`, non-test `src/`, `README.md`, `AGENTS.md`, `LICENSE` (see `package.json` `files` + `.npmignore`). `prepublishOnly` runs `bun test` and `bun run typecheck`.
 
@@ -432,6 +454,10 @@ Project layout:
 | `src/config-options.ts` | ACP config option builders (model/effort/permission_mode) |
 | `src/session-store.ts` | Persistent session store |
 | `src/shell-words.ts` | `CMD_EXTRA_ARGS` splitter |
+| `src/types.ts` | zod schemas (NDJSON frames, stored session) |
+| `src/*.test.ts` | Unit tests (`node:test`, run under `bun test` / `bun run test:node`) |
+| `scripts/release.mjs` | GitHub release + Homebrew tap (+ optional npm) |
+| `scripts/generate-homebrew-formula.mjs` | Homebrew formula generator |
 | `bun.lock` | Bun lockfile (dev) |
 | `AGENTS.md` | Notes for coding agents |
 

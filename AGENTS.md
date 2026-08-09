@@ -6,6 +6,21 @@ TypeScript ACP stdio adapter for the Command Code CLI (`cmd`).
 - **Node compatibility entry:** `bin/commandcode-acp.mjs` uses tsx under Node so `npx` / npm global / Node-only hosts work without Bun
 - **No emit step** for either path
 
+## Status
+
+- **v0.1.0 released** — GitHub release + Homebrew formula (`tariqwest/homebrew-tap`) are live; **npm is not published yet** (name reserved). `npx -y https://github.com/tariqwest/commandcode-acp` and `brew tap tariqwest/tap && brew install commandcode-acp` are the current install paths.
+- Repo is **public** (required: the Homebrew formula fetches the GitHub tag tarball, which 404s for a private repo).
+
+## Purpose / features
+
+ACP stdio adapter that bridges `cmd` into ACP hosts (Zed, VS Code ACP clients, Devin Desktop). It drives Command Code's headless mode (`cmd -p --output-format json`) — not a PTY.
+
+- Session lifecycle: `new` / `load` / `resume` / `list` / `delete` / `close`, plus `prompt` / `cancel` / `set_config_option` (`model`, `effort`, `permission_mode`) and `set_model` aliases
+- Multi-turn continuation: the result line's `cmdSessionId` is stored and reused via `cmd --resume`
+- Config options come from `cmd --list-models` (model), a built-in per-model effort catalog map (`src/config-options.ts`), and permission mode → `--permission-mode` / `--auto-accept` / `--plan`
+- Sessions persist to `$XDG_CONFIG_HOME/commandcode-acp/sessions.json` (default `~/.config/commandcode-acp`)
+- Tests: `node:test` style, 49 tests across 4 files (`bun test` / `bun run test:node`)
+
 ## Setup
 
 ```bash
@@ -79,3 +94,4 @@ Lockfile: `bun.lock` (do not reintroduce pnpm lockfiles).
 - Cancellation: abort in-flight CLI children via `AbortSignal` (SIGTERM then SIGKILL). No remote cancel needed (local process only).
 - Keep stderr logging only — stdout is the ACP transport.
 - `model` config values come from `cmd --list-models`; `effort` availability per model comes from the built-in catalog map in `src/config-options.ts`.
+- Smoke tests that pipe JSON-RPC and immediately close stdin can exit before stdout flushes (ACP SDK stdio EOF race). Real hosts hold stdin open; keep `sleep` between piped requests when scripting a manual smoke. `src/index.ts` hooks `connection.closed` for a clean shutdown.
