@@ -201,7 +201,7 @@ class CmdCliRequirement < Requirement
 
   def message
     <<~EOS
-      commandcode-acp requires the Command Code CLI (\\`cmd\\`) on PATH.
+      commandcode-acp requires the Command Code CLI (\`cmd\`) on PATH.
 
       Install with npm:
 
@@ -237,11 +237,11 @@ class ${className} < Formula
 
         #{bin}/commandcode-acp
 
-      Runtime dependency: Command Code CLI (\\`cmd\\`) via npm:
+      Runtime dependency: Command Code CLI (\`cmd\`) via npm:
 
         npm install -g command-code
 
-      Auth with \\`cmd login\\`. Override binary via CMD_BIN_PATH.
+      Auth with \`cmd login\`. Override binary via CMD_BIN_PATH.
     EOS
   end
 
